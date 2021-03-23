@@ -71,13 +71,13 @@
               <v-col md="3" sm="12" cols="12" align-self="end" >
                   <div class="d-flex justify-end">
                     <v-btn  class="mr-4 my-4"
-                    
                                 outlined
                                 color="primary"
-                                @click="editPickedOrder()"
+                                @click="save()"
+                                :disabled="disableSave"
                                 >
                                 <v-icon left>
-                                    mdi-play-circle-outline
+                                    mdi-content-save
                                 </v-icon>
                                 Enregistrer
                     </v-btn>
@@ -131,6 +131,8 @@ export default {
       idPicked : 0,
       showGroup : false ,
       showBreadCrumbs : false ,
+      disableSave : true ,
+      nbProductPickedOrder : 0 ,
       headers : [
                     { text: 'qrcode', value: 'qrcode', },
                     { text: 'Produit', value: 'name', sortable: false },
@@ -169,29 +171,36 @@ export default {
 
 
 
- /* watch : {
-      infoProduct : function(product) {
-          console.log(product);
-          console.log("watcher");
+  watch : {
+      productsPicked : function(value) {
+          console.log(this.nbProductPickedOrder);
+       if(value.length > this.nbProductPickedOrder )
+            this.disableSave= false ;
+        else
+             this.disableSave= true ;
       }
-  },*/
+  },
 
    created : function() {
        this.idOrder = parseInt(this.$route.params.id_order);
 
        this.$store.dispatch('removeAllProductsPicked');
-      
-       this.initProductToPicked();
 
-       if(this.$route.params.id_picked) {
+        if(this.$route.params.id_picked) {
             this.idPicked = this.$route.params.id_picked ;
             this.showGroup = true ;
             const playload = {
                 id_order :  this.idOrder ,
                 id_picked : this.idPicked
-            }
+            };
             this.$store.dispatch('initProductsPickedFromOrder',playload);
+            
        }
+       this.nbProductPickedOrder =  this.$store.getters.getProductsOrderPicked(this.idOrder).length;
+      
+       this.initProductToPicked();
+
+      
 
     },
 
@@ -301,6 +310,10 @@ export default {
 
              this.addProductTopickedSelect( getproduct.id_product,  getproduct.name , getproduct.version);
 
+        },
+
+        save : function() {
+            console.log("save");
         }
     }
 
