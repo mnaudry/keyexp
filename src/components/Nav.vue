@@ -51,9 +51,9 @@ export default {
        mini: true,
        selectedItem : true ,
        links : [
-        { icon : 'mdi-view-dashboard' , text : 'Tableau de bord', route :'/' },
         { icon : 'mdi-shopping' , text : 'Commandes', route :'/orders' },
-        { icon : 'mdi-format-list-checkbox' , text : 'préparation', route :'/pickedOrders' }
+        { icon : 'mdi-format-list-checkbox' , text : 'préparations', route :'/pickedOrders' },
+        { icon :'mdi-group' , text: 'Regroupage' , route:'/pickedOrderGroups'}
       ]
     };
   }

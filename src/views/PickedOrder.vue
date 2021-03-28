@@ -16,50 +16,74 @@
                             inset
                             vertical
                             ></v-divider>
-                            
+                            <!-- hide-details label="Select" -->
                             <v-select  
                                 :items="productsToPickedSelectList"
-                                item-text ="name"
-                                item-value ="id"
+                                item-text="name"
+                                item-value="id"
                                 menu-props="auto"
                                 no-data-text="Pas de produits à préparer"
                                 v-model="productsToPickedSelected"
-                                label="Select"
-                                hide-details
+                                
                                 prepend-icon="mdi-chart-box-plus-outline"
-                                single-line >
+                                single-line 
+                                hint="scanner pour l'ajouter"
+                                placeholder="Choisissez un produit"
+                                >
                             </v-select>
                              <v-divider
                             class="mx-4"
                             inset
                             vertical
                             ></v-divider>
-                            <v-btn  class="mr-4" 
-                                outlined
-                                color="primary"
-                                @click="scan()"
-                                >
-                                <v-icon left>
-                                    mdi-qrcode-scan
-                                </v-icon>
-                                Scanner
-                            </v-btn>
+                            <v-tooltip top  >
+                                <template v-slot:activator="{ on, attrs }">
+                                    <v-btn  class="mr-4" 
+                                        v-bind="attrs"
+                                        v-on="on"
+                                        outlined
+                                        color="primary"
+                                        @click="scan()"
+                                        >
+                                        <v-icon left>
+                                            mdi-qrcode-scan
+                                        </v-icon>
+                                        Scanner
+                                    </v-btn>
+                                </template>
+                                <span>Scanner le produit pour l'ajouter dans la liste</span>
+                            </v-tooltip>
                     </v-toolbar>
                 </template>
-                <template v-slot:item.actions="{ item }">
-                    <v-icon
-                        v-if="item.canBeDelete"
-                        dense
-                        
-                        @click="removeProductPicked(item)"
-                    >
-                        mdi-close
-                    </v-icon>
+                <template v-slot:item.actions="{item}">
+                    <v-tooltip top v-if="item.canBeDelete" >
+                        <template v-slot:activator="{ on, attrs }">
+
+                            <v-icon
+                                v-bind="attrs"
+                                v-on="on"
+                                dense
+                                
+                                @click="removeProductPicked(item)"
+                            >
+                                mdi-close
+                            </v-icon>
+                        </template>
+                        <span>Supprimer le produit de la liste</span>
+                    </v-tooltip>
                 </template>
-                 <template v-slot:item.grouped="{ item }">
+                 <template v-slot:item.grouped="{item}">
                    <v-simple-checkbox
                     disabled
                     v-model="item.grouped"
+                   
+                    ></v-simple-checkbox>
+                </template>
+
+                 <template v-slot:item.shipped="{item}">
+                   <v-simple-checkbox
+                    disabled
+                    v-model="item.shipped"
                    
                     ></v-simple-checkbox>
                 </template>
@@ -70,55 +94,42 @@
               <v-spacer></v-spacer>
               <v-col md="3" sm="12" cols="12" align-self="end" >
                   <div class="d-flex justify-end">
-                    <v-btn  class="mr-4 my-4"
-                                outlined
-                                color="primary"
-                                @click="save()"
-                                :disabled="disableSave"
-                                >
-                                <v-icon left>
-                                    mdi-content-save
-                                </v-icon>
-                                Enregistrer
-                    </v-btn>
+                   <v-tooltip top  >
+                        <template v-slot:activator="{ on, attrs }">
+                   
+                            <v-btn  class="mr-4 my-4"
+                                        v-bind="attrs"
+                                        v-on="on"
+                                        outlined
+                                        color="primary"
+                                        @click="save()"
+                                        :disabled="disableSave"
+                                        >
+                                        <v-icon left>
+                                            mdi-content-save
+                                        </v-icon>
+                                        Enregistrer
+                            </v-btn>
+                        </template>
+                        <span>Enregister pour sauvegarder la préparation</span>
+                    </v-tooltip>
                  </div>
             </v-col>
         </v-row>
     </v-card>
-    <v-snackbar
-      :timeout="-1"
-      :value="true"
-      elevation="24"
-      v-model="snackbar"
-      absolute
-      color="primary"
-      centered
-      top
-      class="text--white"
-    >
-      
-      {{ message }}
-      <template v-slot:action="{ attrs }">
-        <v-btn
-          color="secondary"
-          text
-          v-bind="attrs"
-          @click="snackbar = false"
-        >
-          Close
-        </v-btn>
-      </template>
-    </v-snackbar>
+     <SnackBar :snackbar="snackbar" :message="message" @clicked="snackBarClose" />
 </div>
 </template>
 
 <script>
 import HeaderTitle from '../components/HeaderTitle';
+import SnackBar from '../components/SnackBar';
 
 export default {
   name: 'PickedOrder',
   components : {
-      HeaderTitle
+      HeaderTitle,
+      SnackBar,
   },
  
   data : function() {
@@ -136,12 +147,11 @@ export default {
       headers : [
                     { text: 'qrcode', value: 'qrcode', },
                     { text: 'Produit', value: 'name', sortable: false },
-                    { text: 'Poids', value: 'weight', sortable: false },
-                    { text: 'Grouper', value: 'grouped' },
+                    { text: 'Poids en g', value: 'weight', sortable: false },
+                    { text: 'Groupé', value: 'grouped' },
+                    { text: 'Expédié', value: 'shipped' },
                     { text: 'Actions', value: 'actions', sortable: false },
               ],
-
-      //productsPicked : [] ,
 
       
 
@@ -173,30 +183,35 @@ export default {
 
   watch : {
       productsPicked : function(value) {
-          console.log(this.nbProductPickedOrder);
-       if(value.length > this.nbProductPickedOrder )
-            this.disableSave= false ;
-        else
-             this.disableSave= true ;
-      }
+
+        if (value.length > this.nbProductPickedOrder)
+             this.disableSave = false ;
+        else    
+            this.disableSave= true ;
+        
+        }
   },
 
    created : function() {
+      
        this.idOrder = parseInt(this.$route.params.id_order);
 
        this.$store.dispatch('removeAllProductsPicked');
 
+        let playload = {
+                id_order :  this.idOrder ,
+            };
+       
+
         if(this.$route.params.id_picked) {
             this.idPicked = this.$route.params.id_picked ;
             this.showGroup = true ;
-            const playload = {
-                id_order :  this.idOrder ,
-                id_picked : this.idPicked
-            };
+            playload.id_picked = this.idPicked ;
+           
             this.$store.dispatch('initProductsPickedFromOrder',playload);
             
        }
-       this.nbProductPickedOrder =  this.$store.getters.getProductsOrderPicked(this.idOrder).length;
+       this.nbProductPickedOrder =  this.$store.getters.getProductsOrderPicked(playload).length;
       
        this.initProductToPicked();
 
@@ -214,7 +229,7 @@ export default {
         },
 
         addProductTopickedSelect : function(id , name, version) {
-            //console.log(id);
+            
             this.productsToPickedSelectList.push({ id: id , name : `${name}_${version}`});
         },
 
@@ -226,59 +241,23 @@ export default {
              this.productsToPickedSelectList = array;
         },
 
-        //{name :"KeyNetic" , qrcode :'KeyNetic_V1_145789' , weight : 200 }
+        
        generateProductScanInfo : function(id) {
-
-            
-            /*const product =   this.productsToPicked.find((product)=> {
-                return (product.id_product === id);
-            })/*/
-
-           /* const digit = Math.floor(100000 + Math.random() * 9000000);
-            const weight = Math
-            let newProduct = {
-                name : product.name,
-                qrcode : `${product.name}_${product.version}_${digit}`,
-                weight :
-            };
-            console.log(newProduct);*/
-
-           /* const product = 'titi';
-            this.$store.dispatch('action1',product).then((arg) => {
-                 //   console.log("resolve", arg);
-                    console.log("call get data",arg);
-                    console.log(this.$store.getData);
-                })*/
-
-           /* this.$store.dispatch('generateNewProduct',product).then((arg) => {
-                    console.log("resolve", arg);
-                    console.log(this.$store.getNewProduct);
-                })*/
-
-
-            //this.productsPicked.push(product);
-           // const product = id ;
-          //  const response = await this.$store.dispatch('action1',product);
-           // console.log("reponse addProductToproductsPicked", response );
-            //this.$store.commit('modifData',product);
-            //console.log(this.productsToPicked);
 
             const product =   this.productsToPicked.find((product)=> {
                 return (product.id_product === id);
             })
 
-            //console.log(product.id , product)
+            
 
             this.$store.dispatch('generateInfoProduct',product).then(() => {
-                   // console.log("resolve", arg);
+                   
             })
-           // console.log("toto");
        
         },
 
         scan : function() {
-            //console.log(this.productsToPickedSelected);
-             //productsToPickedSelectList.
+            
              if(this.productsToPickedSelected.length === 0){
                  this.message = "Vous devez selectionner un produit à scanner";
                  this.snackbar = true;
@@ -297,23 +276,54 @@ export default {
         },
 
         removeProductPicked : function(product) {
-            //console.log(product);
-
-            //console.log(this.productsToPickedSelectList);
+            
              this.$store.dispatch('removeProductPicked',product.id);
 
              const getproduct = this.productsToPicked.find((p) => {
                  return p.id_product === product.id ;
              });
 
-             //console.log(getproduct);
+             
 
              this.addProductTopickedSelect( getproduct.id_product,  getproduct.name , getproduct.version);
 
         },
 
+
+        getAllProductToSave : function(products){
+
+            return products.filter((product)=> {
+                return (product.canBeDelete);
+            })
+        },
+
         save : function() {
-            console.log("save");
+            
+            const products = this.getAllProductToSave(this.productsPicked);
+
+            const playload = {
+                ids : {
+                   id_order :  this.idOrder ,
+                   id_picked : this.idPicked ,
+                },
+                products : products,
+            }
+            
+            this.$store.dispatch('saveProductsPicked',playload).then((response)=>{
+                if(response.status === "saved"){
+                    //catch navigation duplicated eror work arround add random query
+                    this.$router.push({name :'PickedOrder_edit', params: { id_order : this.idOrder , id_picked : response.id_picked }, query : { _randomkey: new Date().getTime()}});
+                    
+                }else {
+                 this.message = "Désolé, nous n'avons pas pu enregister les produits préparés, veuillez contacter le support";
+                 this.snackbar = true;
+        
+                }
+            });
+        },
+
+        snackBarClose : function() {
+            this.snackbar = false;
         }
     }
 

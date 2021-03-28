@@ -1,24 +1,36 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Dashboard from '../views/Dashboard.vue';
 import Orders from '../views/Orders.vue';
+import PickedOrders from '../views/PickedOrders.vue';
+import PickedOrderGroups from '../views/PickedOrderGroups.vue';
 import OrdersDetails from '../views/OrdersDetails.vue';
 import PickedOrder from '../views/PickedOrder.vue';
-import PickedOrders from '../views/PickedOrders.vue';
+import PickedOrderGroup from '../views/PickedOrderGroup.vue';
 
 Vue.use(VueRouter)
 
 const routes = [
   {
     path: '/',
-    name: 'Dashboard',
-    component: Dashboard
+    redirect: { name: 'Orders' }
   },
   {
     path: '/orders',
     name: 'Orders',
     component : Orders
   },
+  {
+    path: '/pickedOrders',
+    name: 'PickedOrders',
+    component : PickedOrders
+  },
+
+  {
+    path: '/pickedOrderGroups',
+    name: 'PickedOrderGroups',
+    component : PickedOrderGroups
+  },
+
   {
     path: '/orders/details/:id',
     name: 'OrdersDetails',
@@ -37,10 +49,10 @@ const routes = [
   },
 
   {
-    path: '/pickedOrders',
-    name: 'PickedOrders',
-    component : PickedOrders
-  }
+    path: '/pickedOrderGroups/create/',
+    name: 'PickedOrderGroup_create',
+    component : PickedOrderGroup
+  },
 ]
 
 const router = new VueRouter({

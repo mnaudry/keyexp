@@ -48,7 +48,7 @@
                 <v-text-field
                     v-model="search"
                     append-icon="mdi-magnify"
-                    label="Recherche ..."
+                    label="Recherche un produit ..."
                     single-line
                     hide-details
                 ></v-text-field>
@@ -59,28 +59,43 @@
                     vertical
                 ></v-divider>
 
-                <v-btn  class="mr-4" v-if="haveOrderPicked()"
-                    outlined
-                    color="primary"
-                    @click="editPickedOrder()"
-                    >
-                    <v-icon left>
-                        mdi-play-circle-outline
-                    </v-icon>
-                    Préparation
-                </v-btn>
+                <v-tooltip top v-if="haveOrderPicked()">
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-btn  
+                            v-bind="attrs"
+                            v-on="on"
+                            class="mr-4" 
+                            outlined
+                            color="primary"
+                            @click="editPickedOrder()"
+                            >
+                            <v-icon left>
+                                mdi-play-circle-outline
+                            </v-icon>
+                            Cont. à préparer
+                        </v-btn>
+                    </template>
+                    <span>Continuer la préparation de la commande</span>
+                </v-tooltip>
                 
-                <v-btn class="mr-4"  v-else
-                    outlined
-                    color="primary"
-                    @click="createPickedOrder()"
-                    >
-                    <v-icon left>
-                        mdi-plus-circle-outline
-                    </v-icon>
-                    Créer une préparation
-                </v-btn>
-
+                <v-tooltip top v-else>
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-btn 
+                            v-bind="attrs"
+                            v-on="on"
+                            class="mr-4"  
+                            outlined
+                            color="primary"
+                            @click="createPickedOrder()"
+                            >
+                            <v-icon left>
+                                mdi-plus-circle-outline
+                            </v-icon>
+                            Préparer la commande
+                        </v-btn>
+                    </template>
+                    <span>Démarrer la préparation de la commande</span>
+                </v-tooltip>
             </v-card-title>
             <v-data-table 
                 :headers="headers"
@@ -93,6 +108,13 @@
                     disabled
                     v-model="item.picked"
                    
+                    ></v-simple-checkbox>
+                </template>
+
+                 <template v-slot:item.grouped="{ item }">
+                    <v-simple-checkbox
+                    disabled
+                     v-model="item.grouped"
                     ></v-simple-checkbox>
                 </template>
 
@@ -129,6 +151,7 @@ export default {
               headers : [
                     { text: 'Produit', value: 'name' },
                     { text: 'Preparé', value: 'picked', sortable : false,  filterable : false },
+                    { text: 'Groupé', value: 'grouped', sortable : false , filterable : false },
                     { text: 'Expédié', value: 'shipped',sortable : false , filterable : false },
               ]
 
@@ -141,9 +164,7 @@ export default {
     },
 
     created : function() {
-        //this.OrderDetails =  this.loadOrderDetails();
-       // console.log(this.OrderDetails);
-      // console.log(this.$route.params.id);
+        
        this.idOrder = parseInt(this.$route.params.id);
        this.OrderDetails =  this.loadOrderDetails();
        this.stateValue = this.$store.getters.getStateValues ;
@@ -171,13 +192,13 @@ export default {
 
 
         isPrepared : function(product){
-               // console.log(product.picked);
+               
                 return product.picked ;
         },
 
 
         isShipped : function(product){
-            // return (Object.keys(product.shipped).length !== 0 );
+            
              return product.shipped ;
         },
 
@@ -194,7 +215,7 @@ export default {
 
 
          createPickedOrder : function() {
-            //const id = this.OrderDetails.orderPicked.id_picked;
+            
             this.$router.push({ name: 'PickedOrder_create', params:{ id_order : this.idOrder } });
         }
 

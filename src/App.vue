@@ -4,7 +4,7 @@
     <v-main >
       <v-divider></v-divider>
       <v-container fluid>
-          <router-view></router-view>
+          <router-view :key="$route.fullPath"></router-view>
       </v-container>
     </v-main>
 <!--<v-navigation-drawer  clipped >

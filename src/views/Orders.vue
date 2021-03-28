@@ -10,25 +10,40 @@
            <v-text-field class="ml-2"
               v-model="search"
               append-icon="mdi-magnify"
-              label="Rechercher ..."
+              label="Rechercher un client ..."
               color="primary"
             ></v-text-field>
         </v-col>
         <v-col md="6" sm="12">
           <div class="pt-2 d-flex">
             <v-spacer></v-spacer>
-
-            <v-btn outlined  color='primary' class="mr-2" @click="initOrders()" >
-                    <v-icon color="primary" >
-                      mdi-autorenew
-                    </v-icon>
-            </v-btn>
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                  <v-btn outlined v-bind="attrs"  v-on="on"  color='primary' class="mr-2" @click="initOrders()" >
+                          <v-icon color="primary" >
+                            mdi-autorenew
+                          </v-icon>
+                  </v-btn>
+              </template>
+              <span>Rafraîchir la page</span>
+            </v-tooltip>
           </div>
         </v-col>
       </v-row>
        <v-row>
-          <v-col md="6" sm="12">
-            <v-select dense :items="stateValue" item-text="textState" item-value="state" v-model="selectedState" multiple  chips label="Etat" class="ml-2" @input="selectedChange">
+          <v-col md="6" sm="12" class="mb-2">
+            <v-select dense :items="stateValue" 
+                      item-text="textState" 
+                      item-value="state" 
+                      v-model="selectedState" 
+                      multiple  
+                      chips 
+                      label="Etat" 
+                      class="ml-2" 
+                      @input="selectedChange"
+                       hint="Triez les commandes par Etat"
+                       persistent-hint
+              >
               <template v-slot:selection="{item}">
                    <v-chip label  :color="item.color"  text-color="white" >
                      {{ item.textState }}
@@ -36,8 +51,11 @@
               </template>
             </v-select>
           </v-col>
-          <v-col md="6" sm="12">
-            <v-select dense  :items="priorityValue" item-text="textState" item-value="priority" v-model="selectedPriority" multiple  chips label="priorité" class="mr-2" @input="selectedChange">
+          <v-col md="6" sm="12" class="mb-2">
+            <v-select dense  :items="priorityValue" item-text="textState" item-value="priority" v-model="selectedPriority" multiple  chips label="priorité" class="mr-2" @input="selectedChange"
+                      hint="Triez les commandes par priorité"
+                      persistent-hint
+            >
               <template v-slot:selection="{item}">
                    <v-chip label  :color="item.color"  text-color="white" >
                      {{ item.textState }}
@@ -47,17 +65,7 @@
           </v-col>
        </v-row>
     </v-card>
-   <!-- <v-card outlined >
-      <h1 class="text-button pl-2">{{ title }}</h1>
-      <div></div></div>
-       <v-icon
-        small
-        class="mr-2"
-        @click="editItem(item)"
-      >
-        mdi-pencil
-      </v-icon>
-    </v-card>-->
+  
      
       <v-card outlined class="mt-2">
       <v-data-table
@@ -67,6 +75,7 @@
       :search="search"
       :loading="ordersLoading" 
       :loading-text="ordersLoadingText"
+       no-data-text="Pas des commandes disponibles"
       >
         <template v-slot:item.state="{ item }">
           <v-chip label  :color="getState(item.state, true)"  text-color="white" >
@@ -85,14 +94,23 @@
         </template>
 
         <template v-slot:item.actions="{ item }">
-            <v-btn icon color="primary ml-3">
-                <v-icon
-                    dense outlined
-                    @click="openDetails(item.id)"
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn icon 
+                      color="primary ml-3"
+                      v-bind="attrs"
+                      v-on="on"
                 >
-                mdi-shopping-search
-                </v-icon>
-            </v-btn>
+                    <v-icon
+                        dense outlined
+                        @click="openDetails(item.id)"
+                    >
+                    mdi-shopping-search
+                    </v-icon>
+                </v-btn>
+              </template>
+            <span>Afficher les détails de la commande</span>
+            </v-tooltip>
         </template>
       </v-data-table>
     </v-card>
@@ -100,9 +118,10 @@
 </template>
 
 <script>
-// @ is an alias to /src
+
 import Format from 'date-fns/format';
 import HeaderTitle from '../components/HeaderTitle';
+import Util from '../util';
 
 export default {
   name: 'Home',
@@ -147,7 +166,7 @@ export default {
   computed : {
 
     ordersHeaders  : function (){
-         //{id: 10 ,client: 'guillaume Star', etat :1, d_achat :'06/03/2021' , d_p_livraison:'13/03/2021'},
+        
          return [
            {
              text : 'Id',
@@ -161,14 +180,14 @@ export default {
            } ,
 
            {
-             text : 'D. achat',
+             text : 'Date d\'achat',
              value :'d_achat',
            },
 
-          {
+          /*{
              text : 'D. prév. liv.',
              value :'d_p_livraison',
-           },
+           },*/
 
             {
              text : 'Etat',
@@ -189,32 +208,19 @@ export default {
 
    methods: {
       getState : function (state , color = false ) {
-        return (color)?this.stateValue[state].color : this.stateValue[state].textState;
+        
+        return Util.getState(this.stateValue ,state, color);
       },
 
 
       getPriority : function (priority, date, color = false) {
 
-           const now = new Date().getTime() ;
-           const nbDaySt = date - now ;
-           const aDay = 1000*60*60*24;
-           const  days = Math.round((Math.abs(nbDaySt)/aDay));
-          if(priority === 4)
-             return (color)? this.priorityValue[priority].color :  this.priorityValue[priority].textPriority ; 
-          else 
-            return (color)?this.priorityValue[priority].color : this.priorityValue[priority].textPriority + ` ${days} jour(s)`;
+            return Util.getPriority(this.priorityValue,priority, date, color);
 
       },
 
 
       priority : function (state,date,color=false) {
-
-        
-        //const nbDay =  (now - date) >= 0 ?
-
-       
-
-       // console.log(Format(new Date(),'dd/MM/yyyy'));
 
 
         if(state < 3) {
@@ -255,13 +261,13 @@ export default {
 
 
       selectedChange : function() {
-       // console.log(this.selectedState);
+       
          this.orders =  this.updateOrders(this.selectedState,this.selectedPriority) ;
          this.ordersLoading = false ;
       },
 
       selectedPriorityChange : function() {
-        //console.log(this.selectedPriority)
+        
         this.orders =  this.updateOrders(this.selectedPriority,'priority') ;
         this.ordersLoading = false ;
       },
@@ -286,7 +292,7 @@ export default {
       },
 
       openDetails : function(id) {
-         // console.log("details");
+        
           this.$router.push({ name: 'OrdersDetails', params: { id: id } });
       }
 
